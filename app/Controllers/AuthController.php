@@ -26,5 +26,33 @@ class AuthController extends BaseController {
         
     }
 
+    public function register(){
+        $name = $_POST['name'];
+        $gender = $_POST['gender'];
+        $email = $_POST['email'];
+        $phone = $_POST['phone'];
+        $zipcode = $_POST['zipcode'];
+        $address = $_POST['address'];
+        $state = $_POST['state'];
+        $city = $_POST['city'];
+        $contract_date = $_POST['contract_date'];
+        $salary = $_POST['salary'];
+        $password = $_POST['password'];
+        $is_medic = $_POST['is_medic'];
+
+        $database = Database::getInstance();
+        $database->query("INSERT INTO persons (name, gender, email, phone, zipcode, address, state, city) VALUES ('$name', '$gender', '$email', '$phone', '$zipcode', '$address', '$state', '$city')");
+
+        $id = $database->getLastInsertedId();
+
+        $database->query("INSERT INTO employees (id, contract_date, salary, password, is_medic) VALUES ('$id', '$contract_date', '$salary', '$password', '$is_medic')");
+
+        if($database->conn->error){
+            self::errorResponse($database->conn->error);
+        }else{
+            self::successResponse("Usuário cadastrado com sucesso");
+        }
+    }
+
 }
     

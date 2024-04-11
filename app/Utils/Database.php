@@ -45,6 +45,11 @@ class Database{
         return $result;
     }
 
+    public static function getLastInsertedId(){
+        $conn = self::getInstance()->conn;
+        return $conn->insert_id;
+    }
+
     public static function close($conn){
         $conn->close();
     }
