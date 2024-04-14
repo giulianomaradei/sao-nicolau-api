@@ -33,7 +33,7 @@ CREATE TABLE patients (
     FOREIGN KEY (id) REFERENCES persons(id)
 );
 
-CREATE TABLE schedule (
+CREATE TABLE schedules (
     id INT AUTO_INCREMENT PRIMARY KEY,
     date DATE NOT NULL,
     hour TIME NOT NULL,
