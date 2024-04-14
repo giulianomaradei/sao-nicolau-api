@@ -7,20 +7,32 @@ abstract class BaseModel{
 
     protected $databaseConnection;
 
-    public function __construct($table, $fields, $data){
+    public function __construct($table, $fields){
         $this->table = $table;
         $this->fields = $fields;
         $this->databaseConnection = Database::getInstance();
-
-        $this->create($data);
     }
 
     public function create($data){
-        $fields = implode(", ", $this->fields);
-        $values = implode("', '", $data);
-        $result = $this->databaseConnection->query("INSERT INTO $this->table ($fields) VALUES ('$values')");
-        //retorna o id;
-        return $this->databaseConnection->conn->insert_id;
+        $placeholders = str_repeat('?, ', count($this->fields) - 1) . '?';
+    
+        $query = "INSERT INTO $this->table (" . implode(', ', $this->fields) . ") VALUES ($placeholders)";
+    
+        $stmt = $this->databaseConnection->prepare($query);
+    
+        if ($stmt === false) {
+            return false;
+        }
+    
+        $stmt->bind_param(str_repeat('s', count($data)), ...$data);
+    
+        $stmt->execute();
+    
+        if ($stmt->affected_rows > 0) {
+            return $this->databaseConnection->getLastInsertedId();
+        } else {
+            return false;
+        }
     }
 
     public function findById($id){
@@ -34,10 +46,23 @@ abstract class BaseModel{
     }
 
     public function update($id, $data){
-        $fields = implode(", ", $this->fields);
-        $values = implode("', '", $data);
-        $this->databaseConnection->query("UPDATE $this->table SET $fields = '$values' WHERE id = $id");
-        return $this->databaseConnection->conn->insert_id;
+        $fields = array_keys($data);
+        $values = array_values($data);
+    
+        $setStatements = [];
+        foreach ($fields as $field) {
+            $setStatements[] = "$field = ?";
+        }
+        $setClause = implode(", ", $setStatements);
+    
+        $values[] = $id;
+    
+        $stmt = $this->databaseConnection->prepare("UPDATE $this->table SET $setClause WHERE id = ?");
+        
+        $types = str_repeat("s", count($values));
+        $stmt->bind_param($types, ...$values);
+    
+        return $stmt->execute();
     }
 
 }

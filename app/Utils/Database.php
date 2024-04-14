@@ -19,7 +19,7 @@ class Database{
 
     private static function connect(){
 
-        $env = parse_ini_file(__DIR__.'/../../.env');
+        $env = parse_ini_file($_SERVER['DOCUMENT_ROOT'] . '/.env');
 
         $servername = $env['DB_HOST'];
         $username = $env['DB_USER'];
@@ -43,6 +43,11 @@ class Database{
         $result = $conn->query($sql);
         $result = $result->fetch_all(MYSQLI_ASSOC);
         return $result;
+    }
+
+    public static function prepare($sql){
+        $conn = self::getInstance()->conn;
+        return $conn->prepare($sql);
     }
 
     public static function getLastInsertedId(){

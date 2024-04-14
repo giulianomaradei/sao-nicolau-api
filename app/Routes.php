@@ -8,5 +8,4 @@ $router = new Router();
 $router->addRoute('/auth/login', AuthController::class, 'login');
 $router->addRoute('/auth/register', AuthController::class, 'register');
 
-
 return $router;

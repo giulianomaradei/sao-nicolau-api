@@ -1,6 +1,9 @@
 <?php
 
 require_once 'BaseController.php';
+require_once __DIR__ . '/../Models/Person.php';
+require_once __DIR__ . '/../Models/Employee.php';
+require_once __DIR__ . '/../Models/Medic.php';
 require_once __DIR__ . '/../Utils/Database.php';
 
 class AuthController extends BaseController {
@@ -9,21 +12,25 @@ class AuthController extends BaseController {
         $email = $_POST['email'];
         $password = $_POST['password'];
 
-        $database = Database::getInstance();
-        $result = $database->query("SELECT p.id, e.* FROM persons p JOIN employees e ON p.id = e.id WHERE p.email = '$email'");
+        try{
+            $person = (new Person())->findByEmail($email);
 
-        if(count($result) == 0){
-            self::errorResponse("Usuário não encontrado");
-            return;
-        }
+            if($person === null){
+                self::errorResponse("Usuário não encontrado");
+                return;
+            }
 
-        $employee = $result[0];
-        if(password_verify($password, $employee['password'])){
-            self::successResponse($employee);
-        }else{
-            self::errorResponse("Senha incorreta");
+            if(password_verify($password, $person['password'])){
+                session_start();
+                $_SESSION['id'] = $person['id'];
+                self::successResponse($person);
+            }else{
+                self::errorResponse("Senha incorreta");
+            }
+
+        }catch(Exception $e){
+            self::errorResponse($e->getMessage());
         }
-        
     }
 
     public function register(){
@@ -35,22 +42,29 @@ class AuthController extends BaseController {
         $address = $_POST['address'];
         $state = $_POST['state'];
         $city = $_POST['city'];
-        $contract_date = $_POST['contract_date'];
+        $contract_date = DateTime::createFromFormat('d/m/Y', $_POST['contract_date'])->format('Y-m-d');
+
         $salary = $_POST['salary'];
-        $password = $_POST['password'];
-        $is_medic = $_POST['is_medic'];
+        $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+        $is_medic = $_POST['is_medic'] ?? false;
 
-        $database = Database::getInstance();
-        $database->query("INSERT INTO persons (name, gender, email, phone, zipcode, address, state, city) VALUES ('$name', '$gender', '$email', '$phone', '$zipcode', '$address', '$state', '$city')");
+        try{
+            $personId = (new Person())->create([$name, $gender, $email, $phone, $zipcode, $address, $state, $city]);
 
-        $id = $database->getLastInsertedId();
+            $employeeId = (new Employee())->create([$personId, $contract_date, $salary, $password]);
 
-        $database->query("INSERT INTO employees (id, contract_date, salary, password, is_medic) VALUES ('$id', '$contract_date', '$salary', '$password', '$is_medic')");
+            if($is_medic){
+                $crm = $_POST['crm'];
+                $specialty = $_POST['specialty'];
 
-        if($database->conn->error){
-            self::errorResponse($database->conn->error);
-        }else{
+                (new Medic())->create([$employeeId, $crm, $specialty]);
+            }
+
+            session_start();
+            $_SESSION['id'] = $employeeId;
             self::successResponse("Usuário cadastrado com sucesso");
+        }catch(Exception $e){
+            self::errorResponse($e->getMessage());
         }
     }
 

@@ -1,22 +1,21 @@
 <?php
 
+require_once 'BaseModel.php';
+
 class Person extends BaseModel{
     protected $name, $gender, $email, $phone, $zipcode, $address, $state, $city;
 
 
-    public function __construct($name, $gender, $email, $phone, $zipcode, $address, $state, $city){
-        
-        $this->name = $name;
-        $this->gender = $gender;
-        $this->email = $email;
-        $this->phone = $phone;
-        $this->zipcode = $zipcode;
-        $this->address = $address;
-        $this->state = $state;
-        $this->city = $city;
+    public function __construct(){
 
+        parent::__construct('persons', ['name', 'gender', 'email', 'phone', 'zipcode', 'address', 'state', 'city']);
+    }
 
-        parent::__construct('persons', ['id', 'name', 'gender', 'email', 'phone', 'zipcode', 'address', 'state', 'city'], $data);
+    public function findByEmail($email){
+        $stmt = $this->databaseConnection->prepare("SELECT p.id, e.* FROM $this->table p JOIN employees e ON p.id = e.id WHERE p.email = ?");
+        $stmt->execute([$email]);
+        $result = $stmt->get_result();
+        return $result->fetch_assoc();
     }
 
 }
