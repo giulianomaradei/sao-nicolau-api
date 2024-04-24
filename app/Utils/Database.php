@@ -55,6 +55,21 @@ class Database{
         return $conn->insert_id;
     }
 
+    public static function beginTransaction(){
+        $conn = self::getInstance()->conn;
+        $conn->begin_transaction();
+    }
+
+    public static function commit(){
+        $conn = self::getInstance()->conn;
+        $conn->commit();
+    }
+
+    public static function rollback(){
+        $conn = self::getInstance()->conn;
+        $conn->rollback();
+    }
+
     public static function close($conn){
         $conn->close();
     }

@@ -48,24 +48,29 @@ class AuthController extends BaseController {
         $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
         $is_medic = $_POST['is_medic'] ?? false;
 
-        try{
-            $personId = (new Person())->create([$name, $gender, $email, $phone, $zipcode, $address, $state, $city]);
+        $this->executeInTransaction(function() use ($name, $gender, $email, $phone, $zipcode, $address, $state, $city, $contract_date, $salary, $password, $is_medic) {
+            $person = new Person();
+            if($person->findByEmail($email) !== null){
+                self::errorResponse("Email já cadastrado");
+                exit();
+            }
 
-            $employeeId = (new Employee())->create([$personId, $contract_date, $salary, $password]);
+            $personId = $person->create([$name, $gender, $email, $phone, $zipcode, $address, $state, $city]);
+
+            (new Employee())->create([$personId, $contract_date, $salary, $password]);
 
             if($is_medic){
                 $crm = $_POST['crm'];
                 $specialty = $_POST['specialty'];
 
-                (new Medic())->create([$employeeId, $crm, $specialty]);
+                (new Medic())->create([$personId, $crm, $specialty]);
             }
 
             session_start();
-            $_SESSION['id'] = $employeeId;
-            self::successResponse("Usuário cadastrado com sucesso");
-        }catch(Exception $e){
-            self::errorResponse($e->getMessage());
-        }
+            $_SESSION['id'] = $personId;
+        });
+
+        self::successResponse("Usuário cadastrado com sucesso");
     }
 
 }

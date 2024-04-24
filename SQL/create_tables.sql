@@ -18,7 +18,7 @@ CREATE TABLE employees (
     FOREIGN KEY (id) REFERENCES persons(id)
 );
 
-CREATE TABLE doctors (
+CREATE TABLE medics (
     id INT PRIMARY KEY,
     crm VARCHAR(255) NOT NULL,
     specialty VARCHAR(255) NOT NULL,
@@ -40,7 +40,7 @@ CREATE TABLE schedules (
     name VARCHAR(255) NOT NULL,
     gender ENUM('M', 'F') NOT NULL,
     email VARCHAR(255) NOT NULL,
-    doctor_id INT NOT NULL,
-    FOREIGN KEY (doctor_id) REFERENCES doctors(id)
+    medic_id INT NOT NULL,
+    FOREIGN KEY (medic_id) REFERENCES medics(id)
 );
 

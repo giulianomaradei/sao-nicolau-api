@@ -64,5 +64,12 @@ abstract class BaseModel{
     
         return $stmt->execute();
     }
+    public function where($field, $value){
+        $stmt = $this->databaseConnection->prepare("SELECT * FROM $this->table WHERE $field = ?");
+        $stmt->bind_param('s', $value);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
 
 }
